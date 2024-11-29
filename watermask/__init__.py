@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFilter
@@ -168,13 +170,25 @@ def chop_image_v2(background_image:Image, layer_image:Image, blend_mode:str, opa
 
     return Image.fromarray(np.uint8(blended_np)).convert('RGB')
 
+def get_file_extension(file_path):
+    # 使用os.path.splitext()分离文件名和扩展名
+    _, file_extension = os.path.splitext(file_path)
+    return file_extension
 
 
 if __name__ == '__main__':
-    input_path = './images/image1.jpg'
+    folder = './images'
     logo_path = './logo.png'
-    image,mask = image_blend_advance_v2(pil2tensor(Image.open(input_path)),pil2tensor(Image.open(logo_path)),False,"normal",
-                           100,90.00,8.00,None,0.15,1.00,0.00,"lanczos",0,None)
-    add_water_mask_image = tensor2pil(image)
-    add_water_mask_image.save('./results/watermask.png')
-    # print(type(tensor2pil(image)))
+    extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif')
+    for filename in os.listdir(folder):
+        if filename.lower().endswith(extensions):
+            img_path = os.path.join(folder, filename)
+            try:
+                with Image.open(img_path) as img:
+                    image,mask = image_blend_advance_v2(pil2tensor(img),pil2tensor(Image.open(logo_path)),False,"normal",
+                                                        100,90.00,8.00,None,0.15,1.00,0.00,"lanczos",0,None)
+                    add_water_mask_image = tensor2pil(image)
+                    add_water_mask_image.save('./results/'+filename)
+                    print(f"成功处理图片: {filename}")
+            except Exception as e:
+                print(f"无法打开图片 {filename}: {e}")
